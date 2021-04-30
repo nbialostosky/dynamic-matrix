@@ -1,0 +1,33 @@
+version: 2.1
+
+parameters:
+  node-v-1:
+    type: string
+    default: "1"
+  node-v-2:
+    type: string
+    default: ""
+  node-v-3:
+    type: string
+    default: ""
+
+orbs:
+  node: circleci/node@2.0.0
+
+jobs:
+  test:
+    parameters:
+      node-version:
+        type: integer
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run: echo << parameters.node-version >>
+
+workflows:
+  all-tests:
+    jobs:
+      - test:
+          matrix:
+            parameters:

@@ -1,0 +1,51 @@
+version: 2.1
+
+setup: true
+
+parameters:
+  node-v-1:
+    type: string
+    default: "1"
+  node-v-2:
+    type: string
+    default: ""
+  node-v-3:
+    type: string
+    default: ""
+ 
+orbs:
+  continuation: circleci/continuation@0.1.2
+
+jobs:
+  setup:
+    executor: continuation/default
+    steps:
+      - checkout
+      - run: |
+          touch matrixjobs.txt
+          echo << pipeline.parameters.node-v-1 >> >> matrixjobs.txt
+          echo << pipeline.parameters.node-v-2 >> >> matrixjobs.txt
+          echo << pipeline.parameters.node-v-3 >> >> matrixjobs.txt
+          delim=""
+          matrix=""
+          for item in `cat matrixjobs.txt`; do
+            matrix="$matrix$delim'$item'"
+            delim=","
+          done
+          matrix+="]"
+          matrix="[${matrix:0}"
+          echo "export JOB_MATRIX=$matrix" >> $BASH_ENV
+      - run:
+          name: Generate config
+          command: |
+            cat main.yml
+            echo "" >> main.yml
+            echo "              node-version: ${JOB_MATRIX}" >> main.yml
+            cat main.yml
+      - continuation/continue:
+          configuration_path: main.yml
+
+workflows:
+  setup:
+    jobs:
+      - setup
